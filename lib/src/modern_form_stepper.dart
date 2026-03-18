@@ -124,7 +124,7 @@ class ModernFormStep {
   const ModernFormStep({
     required this.title,
     this.subtitle,
-    required this.content,
+    this.content,
     this.state = ModernFormStepState.indexed,
     this.isActive = false,
     this.margin,
@@ -142,7 +142,12 @@ class ModernFormStep {
   /// The content of the step that appears below the [title] and [subtitle].
   ///
   /// Below the content, every step has a 'continue' and 'cancel' button.
-  final Widget content;
+  ///
+  /// Pass `null` to indicate that this step has no meaningful description.
+  /// The [ModernFormTimeline] uses this to decide whether the item is
+  /// expandable. Prefer `null` over sentinel widgets such as
+  /// `SizedBox.shrink()` so that the intent is unambiguous.
+  final Widget? content;
 
   /// The state of the step which determines the styling of its components
   /// and whether steps are interactive.
@@ -692,7 +697,7 @@ class _ModernFormStepperState extends State<ModernFormStepper>
                 ),
             child: Column(
               children: <Widget>[
-                step.content,
+                step.content ?? const SizedBox.shrink(),
                 _buildVerticalControls(index),
               ],
             ),
@@ -785,7 +790,7 @@ class _ModernFormStepperState extends State<ModernFormStepper>
         Visibility(
           maintainState: true,
           visible: i == widget.currentStep,
-          child: widget.steps[i].content,
+          child: widget.steps[i].content ?? const SizedBox.shrink(),
         ),
       );
     }

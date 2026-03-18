@@ -289,7 +289,7 @@ class _TimelineItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Nome — só clicável se houver descrição para mostrar
-                  if (step.content is! SizedBox)
+                  if (step.content != null)
                     GestureDetector(
                       onTap: onTap,
                       behavior: HitTestBehavior.translucent,
@@ -325,10 +325,10 @@ class _TimelineItem extends StatelessWidget {
                       child: step.subtitle!,
                     ),
                   ],
-                  // Só renderiza descrição se não for vazia
-                  if (step.content is! SizedBox)
+                  // Só renderiza descrição se houver conteúdo
+                  if (step.content != null)
                     _TimelineStepDescription(
-                      content: step.content,
+                      content: step.content!,
                       isExpanded: isSelected,
                       accentColor: isCurrent
                           ? theme.colorScheme.primary
