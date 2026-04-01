@@ -38,6 +38,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
 
   /// Índice dentro de widget.steps do item selecionado (-1 = nenhum).
   int _selectedIndex = -1;
+  bool _hasUserSelection = false;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
     super.didUpdateWidget(old);
     if (!identical(old.steps, widget.steps)) {
       _selectedIndex = _initialSelectedIndex();
+      _hasUserSelection = false;
       // Recolhe automaticamente se a lista encolher abaixo do limite visível,
       // evitando que _expanded fique true sem botão de recolher visível.
       if (!_canHideSteps) {
@@ -97,6 +99,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
   void _onTapItem(int globalIndex) {
     setState(() {
       _selectedIndex = globalIndex;
+      _hasUserSelection = true;
     });
   }
 
@@ -104,6 +107,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
     setState(() {
       _expanded = false;
       _selectedIndex = -1;
+      _hasUserSelection = false;
     });
   }
 
@@ -111,8 +115,13 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
   Widget build(BuildContext context) {
     final visibleSteps = _visibleSteps;
     final bool showExpandControls = _canHideSteps;
+    final int processCurrentStepIndex = _resolvedCurrentStepIndex;
     final int highlightedStepIndex =
-        _selectedIndex >= 0 ? _selectedIndex : _resolvedCurrentStepIndex;
+        _hasUserSelection && _selectedIndex >= 0
+            ? _selectedIndex
+            : processCurrentStepIndex;
+    final int expandedStepIndex =
+        _selectedIndex >= 0 ? _selectedIndex : processCurrentStepIndex;
 
     return Padding(
       padding: const EdgeInsets.only(top: 6.0, bottom: 4.0),
@@ -129,8 +138,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
             _TimelineRecolherButton(onTap: _collapse),
           ...List.generate(visibleSteps.length, (i) {
             final gi = _globalIndex(i);
-            final bool isExpandedItem =
-                _selectedIndex == gi || (_selectedIndex < 0 && gi == highlightedStepIndex);
+            final bool isExpandedItem = gi == expandedStepIndex;
             return _TimelineItem(
               step: visibleSteps[i],
               isFirst: i == 0 && _hasHidden,
@@ -388,7 +396,15 @@ bool _isEffectivelyEmptyContent(Widget? content) {
   }
 
   if (content is Text) {
-    return (content.data ?? '').trim().isEmpty;
+    final String plainTextFromData = (content.data ?? '').trim();
+    final String plainTextFromSpan = content.textSpan
+            ?.toPlainText(
+              includeSemanticsLabels: false,
+              includePlaceholders: false,
+            )
+            .trim() ??
+        '';
+    return plainTextFromData.isEmpty && plainTextFromSpan.isEmpty;
   }
 
   if (content is Row) {
