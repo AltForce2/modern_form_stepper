@@ -21,11 +21,24 @@ class ModernFormTimeline extends StatefulWidget {
   /// Quando informado, tem prioridade sobre [ModernFormStep.isActive].
   final int? currentStepIndex;
 
+  /// Constrói o texto do botão "Ver mais" a partir da quantidade de etapas
+  /// ocultas.
+  ///
+  /// Quando não informado, usa [ModernFormStepperTexts.verMais].
+  final String Function(int hiddenCount)? verMaisTextBuilder;
+
+  /// Texto do botão "Recolher".
+  ///
+  /// Quando não informado, usa [ModernFormStepperTexts.recolher].
+  final String? recolherText;
+
   const ModernFormTimeline({
     required this.steps,
     this.defaultVisible,
     this.completedColor,
     this.currentStepIndex,
+    this.verMaisTextBuilder,
+    this.recolherText,
     super.key,
   });
 
@@ -132,10 +145,11 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
             _TimelineVerMaisButton(
               hiddenCount: _hiddenCount,
               onTap: () => setState(() => _expanded = true),
+              textBuilder: widget.verMaisTextBuilder,
             ),
           // Botão "Recolher" no topo: conveniência para listas longas expandidas.
           if (_expanded && showExpandControls)
-            _TimelineRecolherButton(onTap: _collapse),
+            _TimelineRecolherButton(onTap: _collapse, text: widget.recolherText),
           ...List.generate(visibleSteps.length, (i) {
             final gi = _globalIndex(i);
             final bool isExpandedItem = gi == expandedStepIndex;
@@ -151,7 +165,7 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
           }),
           // Botão "Recolher" no rodapé: espelha o do topo para evitar scroll.
           if (_expanded && showExpandControls)
-            _TimelineRecolherButton(onTap: _collapse),
+            _TimelineRecolherButton(onTap: _collapse, text: widget.recolherText),
         ],
       ),
     );
@@ -163,13 +177,18 @@ class _ModernFormTimelineState extends State<ModernFormTimeline> {
 class _TimelineVerMaisButton extends StatelessWidget {
   final int hiddenCount;
   final VoidCallback onTap;
+  final String Function(int hiddenCount)? textBuilder;
 
-  const _TimelineVerMaisButton({required this.hiddenCount, required this.onTap});
+  const _TimelineVerMaisButton({
+    required this.hiddenCount,
+    required this.onTap,
+    this.textBuilder,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final text = ModernFormStepperTexts.verMais(hiddenCount);
+    final text = (textBuilder ?? ModernFormStepperTexts.verMais)(hiddenCount);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 2),
       child: InkWell(
@@ -200,8 +219,9 @@ class _TimelineVerMaisButton extends StatelessWidget {
 
 class _TimelineRecolherButton extends StatelessWidget {
   final VoidCallback onTap;
+  final String? text;
 
-  const _TimelineRecolherButton({required this.onTap});
+  const _TimelineRecolherButton({required this.onTap, this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +238,7 @@ class _TimelineRecolherButton extends StatelessWidget {
               Icon(Icons.expand_less, size: 16, color: Colors.grey.shade500),
               const SizedBox(width: 4),
               Text(
-                ModernFormStepperTexts.recolher,
+                text ?? ModernFormStepperTexts.recolher,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,
